@@ -7,7 +7,8 @@ license  'perl';
 
 build_requires 'Test::More';
 
-auto_install;
+requires 'Redis' => '0.0801';
+requires 'KiokuDB' => '0.32';
 
 WriteAll;
 
