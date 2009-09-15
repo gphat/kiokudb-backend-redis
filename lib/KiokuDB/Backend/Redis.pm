@@ -98,51 +98,22 @@ KiokuDB::Backend::Redis - Redis backend for KiokuDB
 
     use KiokuDB::Backend::Redis;
 
-    my $foo = KiokuDB::Backend::Redis->new();
+    my $kiokudb = KiokuDB->connect('Redis:server=127.0.0.1;debug=1);
     ...
+
+=head1 DESCRPTION
+
+This is a KiokuDB backend for Redis, a self proclaimed data structures server.
+It is rather embryonic, but passes the tests.  I expect to expand it as I
+explore Redis and KiokuDB.
+
+=head1 SEE ALSO
+
+L<http://code.google.com/p/redis/>
 
 =head1 AUTHOR
 
 Cory G Watson, C<< <gphat at cpan.org> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-kiokudb-backend-redis at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=KiokuDB-Backend-Redis>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc KiokuDB::Backend::Redis
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=KiokuDB-Backend-Redis>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/KiokuDB-Backend-Redis>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/KiokuDB-Backend-Redis>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/KiokuDB-Backend-Redis/>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
-
 
 =head1 COPYRIGHT & LICENSE
 
@@ -154,7 +125,4 @@ by the Free Software Foundation; or the Artistic License.
 
 See http://dev.perl.org/licenses/ for more information.
 
-
 =cut
-
-1; # End of KiokuDB::Backend::Redis
