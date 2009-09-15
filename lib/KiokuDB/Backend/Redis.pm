@@ -1,6 +1,7 @@
 package KiokuDB::Backend::Redis;
 use Moose;
 
+use Carp qw(croak);
 use Redis;
 
 our $VERSION = '0.01';
@@ -18,6 +19,8 @@ with qw(
 sub new_from_dsn_params {
     my ( $self, %args ) = @_;
 
+    $args{debug} = 1;
+
     $self->new(_redis => Redis->new(%args));
 }
 
@@ -31,6 +34,7 @@ sub delete {
     foreach my $id ( @uids ) {
 
         $redis->del($id);
+        # TODO Error checking
     }
 
     return;
@@ -50,7 +54,7 @@ sub exists {
             push(@exists, 0);
         }
     }
-
+    # TODO Error checking
     return @exists;
 }
 
@@ -59,10 +63,21 @@ sub insert {
 
     my $redis = $self->_redis;
 
+    my @exists = $self->exists(@entries);
+
     foreach my $entry ( @entries ) {
-        my $ret = $redis->set(
-            $entry->id => $self->serialize($entry),
-        );
+
+        if($entry->has_prev) {
+            my $ret = $redis->set(
+                $entry->id => $self->serialize($entry),
+            );
+            # TODO Error checking
+        } else {
+            my $ret = $redis->setnx(
+                $entry->id => $self->serialize($entry),
+            );
+            # TODO Error checking
+        }
     }
 }
 
@@ -75,6 +90,7 @@ sub get {
 
     foreach my $id ( @ids ) {
         my $val = $redis->get($id);
+        # TODO Error checking
         if(defined($val)) {
             push @ret, $val;
         } else {
