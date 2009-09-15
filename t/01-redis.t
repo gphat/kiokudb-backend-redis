@@ -4,6 +4,7 @@ use Storable qw(thaw dclone);
 use strict;
 use warnings;
 
+use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Redis';
 use ok 'KiokuDB::Collapser';
 use ok 'KiokuDB::LiveObjects';
@@ -29,7 +30,10 @@ use ok 'KiokuDB::TypeMap::Resolver';
     );
 }
 
-my $b = KiokuDB::Backend::Redis->new;
+my $kioku = KiokuDB->connect('Redis:server=127.0.0.1:6379');
+my $b = $kioku->backend;
+# my $b = KiokuDB::Backend::Redis->new(
+# );
 
 my $obj = Foo->new(
     id => "shlomo",

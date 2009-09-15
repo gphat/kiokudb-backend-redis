@@ -6,18 +6,20 @@ use Redis;
 our $VERSION = '0.01';
 
 has '_redis' => (
-    is => 'ro',
-    isa => 'Redis',
-    lazy => 1,
-    default => sub {
-        Redis->new(server => '127.0.0.1:6379', debug => 0)
-    }
+    is => 'rw',
+    isa => 'Redis'
 );
 
 with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::Delegate
 );
+
+sub new_from_dsn_params {
+    my ( $self, %args ) = @_;
+
+    $self->new(_redis => Redis->new(%args));
+}
 
 sub delete {
     my ($self, @ids_or_entries) = @_;
@@ -93,9 +95,6 @@ KiokuDB::Backend::Redis - Redis backend for KiokuDB
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
 
     use KiokuDB::Backend::Redis;
 
