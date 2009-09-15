@@ -15,3 +15,4 @@ META.yml
 README
 t/00-load.t
 t/01-redis.t
+t/01-redis_backend.t
