@@ -4,10 +4,6 @@ use Storable qw(thaw dclone);
 use strict;
 use warnings;
 
-unless(defined($ENV{KIOKU_REDIS_URL})) {
-    plan skip_all => 'Must set KIOKU_REDIS_URL environment variable';
-}
-
 use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Redis';
 use ok 'KiokuDB::Collapser';
@@ -34,80 +30,84 @@ use ok 'KiokuDB::TypeMap::Resolver';
     );
 }
 
-my $kioku = KiokuDB->connect('Redis:server='.$ENV{KIOKU_REDIS_URL});
-my $b = $kioku->backend;
+SKIP: {
+    skip 'Must set KIOKU_REDIS_URL environment variable', 1 unless defined($ENV{KIOKU_REDIS_URL});
 
-my $obj = Foo->new(
-    id => "shlomo",
-    name => "שלמה",
-    friend => Foo->new(
-        id => "moshe",
-        name => "משה",
-    ),
-);
-$obj->friend->friend($obj);
+    my $kioku = KiokuDB->connect('Redis:server='.$ENV{KIOKU_REDIS_URL});
+    my $b = $kioku->backend;
 
-my $c = KiokuDB::Collapser->new(
-    backend => $b,
-    live_objects => my $l = KiokuDB::LiveObjects->new,
-    typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-        typemap => KiokuDB::TypeMap->new
-    ),
-);
+    my $obj = Foo->new(
+        id => "shlomo",
+        name => "שלמה",
+        friend => Foo->new(
+            id => "moshe",
+            name => "משה",
+        ),
+    );
+    $obj->friend->friend($obj);
 
-my $s = $l->new_scope;
+    my $c = KiokuDB::Collapser->new(
+        backend => $b,
+        live_objects => my $l = KiokuDB::LiveObjects->new,
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new
+        ),
+    );
 
-my ( $buffer ) = $c->collapse( objects => [ $obj ]);
+    my $s = $l->new_scope;
 
-my @entries = values %{ $buffer->entries };
+    my ( $buffer ) = $c->collapse( objects => [ $obj ]);
 
-is( scalar(@entries), 2, "two entries" );
+    my @entries = values %{ $buffer->entries };
 
-is_deeply(
-    [ map { !$_ } $b->exists(map { $_->id } @entries) ],
-    [ 1, 1 ],
-    "none exist yet",
-);
+    is( scalar(@entries), 2, "two entries" );
 
-$b->insert(@entries);
+    is_deeply(
+        [ map { !$_ } $b->exists(map { $_->id } @entries) ],
+        [ 1, 1 ],
+        "none exist yet",
+    );
 
-is_deeply(
-    [ $b->exists(map { $_->id } @entries) ],
-    [ 1, 1 ],
-    "both exist",
-);
+    $b->insert(@entries);
 
-foreach my $entry ( @entries ) {
-    ok( my $data = $b->_redis->get($entry->id), "got from db" );
+    is_deeply(
+        [ $b->exists(map { $_->id } @entries) ],
+        [ 1, 1 ],
+        "both exist",
+    );
 
-    $data = $b->deserialize($data);
+    foreach my $entry ( @entries ) {
+        ok( my $data = $b->_redis->get($entry->id), "got from db" );
 
-    isa_ok( $data, "KiokuDB::Entry" );
-    is( ref $data->data, 'HASH', "hash loaded" );
+        $data = $b->deserialize($data);
 
-    is( $data->id, $entry->id, "id is correct" );
-}
+        isa_ok( $data, "KiokuDB::Entry" );
+        is( ref $data->data, 'HASH', "hash loaded" );
 
-my @clones = map { dclone($_) } @entries;
+        is( $data->id, $entry->id, "id is correct" );
+    }
 
-is_deeply(
-    [ $b->get(map { $_->id } @entries) ],
-    [ @clones ],
-    "loaded",
-);
+    my @clones = map { dclone($_) } @entries;
 
-$b->delete($entries[0]->id);
+    is_deeply(
+        [ $b->get(map { $_->id } @entries) ],
+        [ @clones ],
+        "loaded",
+    );
 
-is_deeply(
-    [ map { !$_ } $b->exists(map { $_->id } @entries) ],
-    [ 1, !1 ],
-    "deleted",
-);
+    $b->delete($entries[0]->id);
 
-is_deeply(
-    [ map { !$_ } $b->get(map { $_->id } @entries) ],
-    [ ],
-    "get for with some non-existent entries returns nothing",
-);
+    is_deeply(
+        [ map { !$_ } $b->exists(map { $_->id } @entries) ],
+        [ 1, !1 ],
+        "deleted",
+    );
+
+    is_deeply(
+        [ map { !$_ } $b->get(map { $_->id } @entries) ],
+        [ ],
+        "get for with some non-existent entries returns nothing",
+    );
+};
 
 done_testing;

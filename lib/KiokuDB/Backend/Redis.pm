@@ -4,7 +4,7 @@ use Moose;
 use Carp qw(croak);
 use Redis;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 has '_redis' => (
     is => 'rw',
